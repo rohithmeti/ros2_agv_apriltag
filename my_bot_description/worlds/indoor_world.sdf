@@ -1,0 +1,235 @@
+<?xml version="1.0" ?>
+<sdf version="1.8">
+  <world name="indoor_world">
+    <physics name="1ms" type="ignored">
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1.0</real_time_factor>
+    </physics>
+    
+    <plugin filename="libignition-gazebo-physics-system.so" name="ignition::gazebo::systems::Physics"></plugin>
+    <plugin filename="libignition-gazebo-user-commands-system.so" name="ignition::gazebo::systems::UserCommands"></plugin>
+    <plugin filename="libignition-gazebo-scene-broadcaster-system.so" name="ignition::gazebo::systems::SceneBroadcaster"></plugin>
+    <plugin filename="libignition-gazebo-sensors-system.so" name="ignition::gazebo::systems::Sensors">
+      <render_engine>ogre2</render_engine>
+    </plugin>
+
+    <light type="directional" name="sun">
+      <cast_shadows>true</cast_shadows>
+      <pose>0 0 10 0 0 0</pose>
+      <diffuse>0.8 0.8 0.8 1</diffuse>
+      <specular>0.2 0.2 0.2 1</specular>
+      <direction>-0.5 0.1 -0.9</direction>
+    </light>
+
+    <model name="ground_plane">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision"><geometry><plane><normal>0 0 1</normal><size>100 100</size></plane></geometry></collision>
+        <visual name="visual"><geometry><plane><normal>0 0 1</normal><size>100 100</size></plane></geometry><material><ambient>0.8 0.8 0.8 1</ambient><diffuse>0.8 0.8 0.8 1</diffuse></material></visual>
+      </link>
+    </model>
+
+    <model name="wall_north">
+      <static>true</static>
+      <pose>0 5 1 0 0 0</pose>
+      <link name="link">
+        <collision name="c"><geometry><box><size>10 0.2 2</size></box></geometry></collision>
+        <visual name="v"><geometry><box><size>10 0.2 2</size></box></geometry><material><ambient>0.3 0.3 0.3 1</ambient></material></visual>
+      </link>
+    </model>
+    <model name="wall_south">
+      <static>true</static>
+      <pose>0 -5 1 0 0 0</pose>
+      <link name="link">
+        <collision name="c"><geometry><box><size>10 0.2 2</size></box></geometry></collision>
+        <visual name="v"><geometry><box><size>10 0.2 2</size></box></geometry><material><ambient>0.3 0.3 0.3 1</ambient></material></visual>
+      </link>
+    </model>
+    <model name="wall_east">
+      <static>true</static>
+      <pose>5 0 1 0 0 0</pose>
+      <link name="link">
+        <collision name="c"><geometry><box><size>0.2 10 2</size></box></geometry></collision>
+        <visual name="v"><geometry><box><size>0.2 10 2</size></box></geometry><material><ambient>0.3 0.3 0.3 1</ambient></material></visual>
+      </link>
+    </model>
+    <model name="wall_west">
+      <static>true</static>
+      <pose>-5 0 1 0 0 0</pose>
+      <link name="link">
+        <collision name="c"><geometry><box><size>0.2 10 2</size></box></geometry></collision>
+        <visual name="v"><geometry><box><size>0.2 10 2</size></box></geometry><material><ambient>0.3 0.3 0.3 1</ambient></material></visual>
+      </link>
+    </model>
+
+    <model name="wall_chicane_1">
+      <static>true</static>
+      <pose>-1.67 -2.50 1 0 0 0</pose>
+      <link name="link">
+        <collision name="c"><geometry><box><size>0.2 5 2</size></box></geometry></collision>
+        <visual name="v"><geometry><box><size>0.2 5 2</size></box></geometry><material><ambient>0.3 0.3 0.3 1</ambient></material></visual>
+      </link>
+    </model>
+
+    <model name="wall_chicane_2">
+      <static>true</static>
+      <pose>1.22 2.50 1 0 0 0</pose>
+      <link name="link">
+        <collision name="c"><geometry><box><size>0.2 5 2</size></box></geometry></collision>
+        <visual name="v"><geometry><box><size>0.2 5 2</size></box></geometry><material><ambient>0.3 0.3 0.3 1</ambient></material></visual>
+      </link>
+    </model>
+
+    <model name="table">
+      <static>true</static>
+      <pose>-2.00 3.21 0 0 0 0</pose>
+      <link name="table_top">
+        <pose>0 0 0.8 0 0 0</pose>
+        <collision name="c"><geometry><box><size>1.5 0.8 0.05</size></box></geometry></collision>
+        <visual name="v"><geometry><box><size>1.5 0.8 0.05</size></box></geometry><material><ambient>0.6 0.4 0.2 1</ambient><diffuse>0.6 0.4 0.2 1</diffuse></material></visual>
+      </link>
+      <link name="leg1">
+        <pose>0.6 0.3 0.4 0 0 0</pose>
+        <collision name="c"><geometry><cylinder><radius>0.04</radius><length>0.8</length></cylinder></geometry></collision>
+        <visual name="v"><geometry><cylinder><radius>0.04</radius><length>0.8</length></cylinder></geometry><material><ambient>0.2 0.2 0.2 1</ambient></material></visual>
+      </link>
+      <link name="leg2">
+        <pose>-0.6 0.3 0.4 0 0 0</pose>
+        <collision name="c"><geometry><cylinder><radius>0.04</radius><length>0.8</length></cylinder></geometry></collision>
+        <visual name="v"><geometry><cylinder><radius>0.04</radius><length>0.8</length></cylinder></geometry><material><ambient>0.2 0.2 0.2 1</ambient></material></visual>
+      </link>
+      <link name="leg3">
+        <pose>0.6 -0.3 0.4 0 0 0</pose>
+        <collision name="c"><geometry><cylinder><radius>0.04</radius><length>0.8</length></cylinder></geometry></collision>
+        <visual name="v"><geometry><cylinder><radius>0.04</radius><length>0.8</length></cylinder></geometry><material><ambient>0.2 0.2 0.2 1</ambient></material></visual>
+      </link>
+      <link name="leg4">
+        <pose>-0.6 -0.3 0.4 0 0 0</pose>
+        <collision name="c"><geometry><cylinder><radius>0.04</radius><length>0.8</length></cylinder></geometry></collision>
+        <visual name="v"><geometry><cylinder><radius>0.04</radius><length>0.8</length></cylinder></geometry><material><ambient>0.2 0.2 0.2 1</ambient></material></visual>
+      </link>
+    </model>
+
+    <model name="blue_cube">
+      <static>true</static>
+      <pose>1.18 -2.83 0.5 0 0 0</pose>
+      <link name="link">
+        <collision name="c"><geometry><box><size>1 1 1</size></box></geometry></collision>
+        <visual name="v"><geometry><box><size>1 1 1</size></box></geometry><material><ambient>0 0 1 1</ambient><diffuse>0 0 1 1</diffuse></material></visual>
+      </link>
+    </model>
+
+    <model name="green_cylinder">
+      <static>true</static>
+      <pose>2.76 2.40 0.5 0 0 0</pose>
+      <link name="link">
+        <collision name="c"><geometry><cylinder><radius>0.5</radius><length>1</length></cylinder></geometry></collision>
+        <visual name="v"><geometry><cylinder><radius>0.5</radius><length>1</length></cylinder></geometry><material><ambient>0 1 0 1</ambient><diffuse>0 1 0 1</diffuse></material></visual>
+      </link>
+    </model>
+
+    <!-- APRILTAGS BEGIN (generated by scripts/place_apriltags.py) -->
+    <include>
+      <uri>model://apriltag_36h11_00000</uri>
+      <name>apriltag_0</name>
+      <pose>-3.300 -4.000 0 0 0 0.0000</pose>
+    </include>
+    <include>
+      <uri>model://apriltag_36h11_00001</uri>
+      <name>apriltag_1</name>
+      <pose>-3.300 -2.400 0 0 0 0.0000</pose>
+    </include>
+    <include>
+      <uri>model://apriltag_36h11_00002</uri>
+      <name>apriltag_2</name>
+      <pose>-3.300 -0.800 0 0 0 0.0000</pose>
+    </include>
+    <include>
+      <uri>model://apriltag_36h11_00003</uri>
+      <name>apriltag_3</name>
+      <pose>-3.300 0.800 0 0 0 0.0000</pose>
+    </include>
+    <include>
+      <uri>model://apriltag_36h11_00004</uri>
+      <name>apriltag_4</name>
+      <pose>-3.300 2.400 0 0 0 0.0000</pose>
+    </include>
+    <include>
+      <uri>model://apriltag_36h11_00005</uri>
+      <name>apriltag_5</name>
+      <pose>-3.300 4.000 0 0 0 0.0000</pose>
+    </include>
+    <include>
+      <uri>model://apriltag_36h11_00006</uri>
+      <name>apriltag_6</name>
+      <pose>-0.220 -4.000 0 0 0 0.0000</pose>
+    </include>
+    <include>
+      <uri>model://apriltag_36h11_00007</uri>
+      <name>apriltag_7</name>
+      <pose>-0.220 -2.400 0 0 0 0.0000</pose>
+    </include>
+    <include>
+      <uri>model://apriltag_36h11_00008</uri>
+      <name>apriltag_8</name>
+      <pose>-0.220 -0.800 0 0 0 0.0000</pose>
+    </include>
+    <include>
+      <uri>model://apriltag_36h11_00009</uri>
+      <name>apriltag_9</name>
+      <pose>-0.220 0.800 0 0 0 0.0000</pose>
+    </include>
+    <include>
+      <uri>model://apriltag_36h11_00010</uri>
+      <name>apriltag_10</name>
+      <pose>-0.220 2.400 0 0 0 0.0000</pose>
+    </include>
+    <include>
+      <uri>model://apriltag_36h11_00011</uri>
+      <name>apriltag_11</name>
+      <pose>-0.220 4.000 0 0 0 0.0000</pose>
+    </include>
+    <include>
+      <uri>model://apriltag_36h11_00012</uri>
+      <name>apriltag_12</name>
+      <pose>3.800 -4.000 0 0 0 0.0000</pose>
+    </include>
+    <include>
+      <uri>model://apriltag_36h11_00013</uri>
+      <name>apriltag_13</name>
+      <pose>3.800 -2.400 0 0 0 0.0000</pose>
+    </include>
+    <include>
+      <uri>model://apriltag_36h11_00014</uri>
+      <name>apriltag_14</name>
+      <pose>3.800 -0.800 0 0 0 0.0000</pose>
+    </include>
+    <include>
+      <uri>model://apriltag_36h11_00015</uri>
+      <name>apriltag_15</name>
+      <pose>3.800 0.800 0 0 0 0.0000</pose>
+    </include>
+    <include>
+      <uri>model://apriltag_36h11_00016</uri>
+      <name>apriltag_16</name>
+      <pose>3.800 2.400 0 0 0 0.0000</pose>
+    </include>
+    <include>
+      <uri>model://apriltag_36h11_00017</uri>
+      <name>apriltag_17</name>
+      <pose>3.800 4.000 0 0 0 0.0000</pose>
+    </include>
+    <include>
+      <uri>model://apriltag_36h11_00018</uri>
+      <name>apriltag_18</name>
+      <pose>-1.760 0.800 0 0 0 0.0000</pose>
+    </include>
+    <include>
+      <uri>model://apriltag_36h11_00019</uri>
+      <name>apriltag_19</name>
+      <pose>1.790 -0.800 0 0 0 0.0000</pose>
+    </include>
+    <!-- APRILTAGS END -->
+
+  </world>
+</sdf>

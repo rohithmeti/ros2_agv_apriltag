@@ -1,0 +1,213 @@
+<?xml version="1.0" ?>
+<!--
+  my_robot2 = AprilTag AGV (bigger body, raised chassis, 2 cameras)
+
+  Side view (x forward =>)                      Top view
+                 lidar_1                         +=================+
+                  [==]          z=0.26           |      caster     |
+   +==========================+ z=0.24       [W] |    (front)      | [W]
+   |          body            |=cam_front    [H] |   cam_down  x   | [H]
+   |                          | 35 deg down  [E] |    (centre)     | [E]
+   +==========================+ z=0.12       [L] |      caster     | [L]
+     |      cam_down      |                      |     (rear)      |
+    (o)   (  WHEEL  )    (o)                     +=================+
+   caster  centre axle   caster                  wheels on the centre axle,
+                                                 outside the body
+  base_footprint / base_link = floor point under the robot centre (= wheel axle
+  projected to the floor), so the robot turns in place around the down camera.
+-->
+<robot name="my_robot2" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <xacro:include filename="$(find my_bot_description)/urdf/materials.xacro" />
+
+  <!-- ===================== dimensions (metres, kg) ===================== -->
+  <xacro:property name="body_len"      value="0.40"/>
+  <xacro:property name="body_wid"      value="0.30"/>
+  <xacro:property name="body_hgt"      value="0.12"/>
+  <xacro:property name="clearance"     value="0.12"/>   <!-- floor to body underside -->
+  <xacro:property name="body_mass"     value="15.0"/>
+
+  <xacro:property name="wheel_r"       value="0.06"/>
+  <xacro:property name="wheel_w"       value="0.04"/>
+  <xacro:property name="wheel_y"       value="0.19"/>   <!-- axle centre to wheel centre -->
+  <xacro:property name="wheel_mass"    value="1.0"/>
+
+  <xacro:property name="caster_r"      value="0.025"/>
+  <xacro:property name="caster_x"      value="0.18"/>   <!-- front +x, rear -x -->
+  <xacro:property name="caster_mass"   value="0.2"/>
+
+  <xacro:property name="lidar_r"       value="0.035"/>
+  <xacro:property name="lidar_h"       value="0.04"/>
+
+  <xacro:property name="cam_front_z"   value="0.20"/>   <!-- height above floor -->
+  <xacro:property name="cam_front_tilt" value="0.6109"/> <!-- 35 deg down -->
+  <xacro:property name="cam_down_z"    value="0.11"/>   <!-- lens height above floor -->
+
+  <xacro:property name="body_z" value="${clearance + body_hgt/2}"/>
+  <xacro:property name="body_top" value="${clearance + body_hgt}"/>
+
+  <!-- ===================== helpers ===================== -->
+  <xacro:macro name="box_inertia" params="m x y z *origin">
+    <inertial>
+      <xacro:insert_block name="origin"/>
+      <mass value="${m}"/>
+      <inertia ixx="${m*(y*y+z*z)/12}" iyy="${m*(x*x+z*z)/12}" izz="${m*(x*x+y*y)/12}"
+               ixy="0" ixz="0" iyz="0"/>
+    </inertial>
+  </xacro:macro>
+
+  <!-- ===================== base ===================== -->
+  <link name="base_footprint"/>
+
+  <joint name="base_joint" type="fixed">
+    <parent link="base_footprint"/>
+    <child link="base_link"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </joint>
+
+  <link name="base_link">
+    <xacro:box_inertia m="${body_mass}" x="${body_len}" y="${body_wid}" z="${body_hgt}">
+      <origin xyz="0 0 ${body_z}" rpy="0 0 0"/>
+    </xacro:box_inertia>
+    <visual>
+      <origin xyz="0 0 ${body_z}" rpy="0 0 0"/>
+      <geometry><box size="${body_len} ${body_wid} ${body_hgt}"/></geometry>
+      <material name="body_blue"/>
+    </visual>
+    <collision>
+      <origin xyz="0 0 ${body_z}" rpy="0 0 0"/>
+      <geometry><box size="${body_len} ${body_wid} ${body_hgt}"/></geometry>
+    </collision>
+    <!-- caster legs (visual only, hang from the body underside) -->
+    <visual>
+      <origin xyz="${caster_x} 0 ${(clearance + 2*caster_r)/2}" rpy="0 0 0"/>
+      <geometry><cylinder radius="0.01" length="${clearance - 2*caster_r}"/></geometry>
+      <material name="silver"/>
+    </visual>
+    <visual>
+      <origin xyz="${-caster_x} 0 ${(clearance + 2*caster_r)/2}" rpy="0 0 0"/>
+      <geometry><cylinder radius="0.01" length="${clearance - 2*caster_r}"/></geometry>
+      <material name="silver"/>
+    </visual>
+  </link>
+
+  <!-- ===================== drive wheels (centre axle) ===================== -->
+  <xacro:macro name="wheel" params="side y">
+    <link name="${side}_wheel_1">
+      <inertial>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <mass value="${wheel_mass}"/>
+        <!-- solid cylinder, spin axis = y -->
+        <inertia ixx="${wheel_mass*(3*wheel_r*wheel_r + wheel_w*wheel_w)/12}"
+                 iyy="${wheel_mass*wheel_r*wheel_r/2}"
+                 izz="${wheel_mass*(3*wheel_r*wheel_r + wheel_w*wheel_w)/12}"
+                 ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+      <visual>
+        <origin xyz="0 0 0" rpy="${pi/2} 0 0"/>
+        <geometry><cylinder radius="${wheel_r}" length="${wheel_w}"/></geometry>
+        <material name="black"/>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="${pi/2} 0 0"/>
+        <geometry><cylinder radius="${wheel_r}" length="${wheel_w}"/></geometry>
+      </collision>
+    </link>
+    <joint name="${side}_wheel_joint" type="continuous">
+      <origin xyz="0 ${y} ${wheel_r}" rpy="0 0 0"/>
+      <parent link="base_link"/>
+      <child link="${side}_wheel_1"/>
+      <axis xyz="0 1 0"/>
+    </joint>
+  </xacro:macro>
+
+  <xacro:wheel side="left"  y="${wheel_y}"/>
+  <xacro:wheel side="right" y="${-wheel_y}"/>
+
+  <!-- ===================== casters (front + rear) ===================== -->
+  <xacro:macro name="caster" params="name x">
+    <link name="${name}">
+      <inertial>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <mass value="${caster_mass}"/>
+        <inertia ixx="${0.4*caster_mass*caster_r*caster_r}" iyy="${0.4*caster_mass*caster_r*caster_r}"
+                 izz="${0.4*caster_mass*caster_r*caster_r}" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+      <visual>
+        <geometry><sphere radius="${caster_r}"/></geometry>
+        <material name="silver"/>
+      </visual>
+      <collision>
+        <geometry><sphere radius="${caster_r}"/></geometry>
+      </collision>
+    </link>
+    <joint name="${name}_joint" type="fixed">
+      <origin xyz="${x} 0 ${caster_r}" rpy="0 0 0"/>
+      <parent link="base_link"/>
+      <child link="${name}"/>
+    </joint>
+  </xacro:macro>
+
+  <xacro:caster name="caster_wheel_1"    x="${caster_x}"/>
+  <xacro:caster name="caster_wheel_rear" x="${-caster_x}"/>
+
+  <!-- ===================== lidar (on top, centred) ===================== -->
+  <link name="lidar_1">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="0.2"/>
+      <inertia ixx="0.0001" iyy="0.0001" izz="0.0001" ixy="0" ixz="0" iyz="0"/>
+    </inertial>
+    <visual>
+      <geometry><cylinder radius="${lidar_r}" length="${lidar_h}"/></geometry>
+      <material name="lidar_red"/>
+    </visual>
+    <collision>
+      <geometry><cylinder radius="${lidar_r}" length="${lidar_h}"/></geometry>
+    </collision>
+  </link>
+  <joint name="lidar_joint" type="fixed">
+    <origin xyz="0 0 ${body_top + lidar_h/2}" rpy="0 0 0"/>
+    <parent link="base_link"/>
+    <child link="lidar_1"/>
+  </joint>
+
+  <!-- ===================== cameras =====================
+       Link origin = lens; link +x = viewing direction (Gazebo convention).
+       The housing box sits BEHIND the lens so the camera never sees itself.
+       *_optical_frame = ROS optical convention (z forward, x right, y down);
+       camera images are stamped with these frames.                       -->
+  <xacro:macro name="camera" params="name xyz rpy">
+    <link name="${name}_link">
+      <inertial>
+        <origin xyz="-0.01 0 0" rpy="0 0 0"/>
+        <mass value="0.05"/>
+        <inertia ixx="0.00001" iyy="0.00001" izz="0.00001" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+      <visual>
+        <origin xyz="-0.0105 0 0" rpy="0 0 0"/>
+        <geometry><box size="0.02 0.04 0.03"/></geometry>
+        <material name="black"/>
+      </visual>
+    </link>
+    <joint name="${name}_joint" type="fixed">
+      <origin xyz="${xyz}" rpy="${rpy}"/>
+      <parent link="base_link"/>
+      <child link="${name}_link"/>
+    </joint>
+    <link name="${name}_optical_frame"/>
+    <joint name="${name}_optical_joint" type="fixed">
+      <origin xyz="0 0 0" rpy="${-pi/2} 0 ${-pi/2}"/>
+      <parent link="${name}_link"/>
+      <child link="${name}_optical_frame"/>
+    </joint>
+  </xacro:macro>
+
+  <!-- front: on the front face, tilted 35 deg down to see floor tags ahead -->
+  <xacro:camera name="camera_front" xyz="${body_len/2 + 0.001} 0 ${cam_front_z}" rpy="0 ${cam_front_tilt} 0"/>
+  <!-- down: under the body at the robot centre, looking straight down -->
+  <xacro:camera name="camera_down" xyz="0 0 ${cam_down_z}" rpy="0 ${pi/2} 0"/>
+
+  <xacro:include filename="$(find my_bot_description)/urdf/ign_plugins.gazebo.xacro" />
+
+</robot>

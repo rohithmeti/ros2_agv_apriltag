@@ -1,0 +1,52 @@
+# AprilTag floor markers for indoor_world.sdf
+#
+# Family 36h11, IDs 0-19 (from src/AprilTag_0-20_family36h11.pdf).
+# Tags lie flat on the floor. (x, y) is the tag centre in the world/map frame.
+# Optional per-tag "yaw" (rad, default 0). yaw 0 = tag top edge faces +y (north),
+# right edge faces +x (east) - verified with a downward camera in Gazebo.
+#
+# Room layout (10 m x 10 m, walls at +/-5):
+#   wall_chicane_1 : x = -1.67, y -5..0   -> W and M lanes connect only at y > 0
+#   wall_chicane_2 : x = +1.22, y  0..5   -> M and E lanes connect only at y < 0
+#
+# Grid: 3 lane columns x 6 rows, id = column*6 + row (row 0 = south).
+#   column W x=-3.30   ids 0..5
+#   column M x=-0.22   ids 6..11
+#   column E x=+3.80   ids 12..17   (moved east of centre to clear the green cylinder)
+#   rows   y = -4.0, -2.4, -0.8, 0.8, 2.4, 4.0
+# Connectors (lane change points):
+#   18 : W <-> M on row y=+0.8 (gap above wall_chicane_1)
+#   19 : M <-> E on row y=-0.8 (gap below wall_chicane_2)
+#
+# Edit this file, then run:  python3 scripts/place_apriltags.py
+
+family: tag36h11
+tag_size: 0.20        # edge of the black square in metres (the value detectors want)
+texture_size: 0.25    # printed size incl. 1-cell white quiet zone (10 cells x 0.025 m)
+world_file: worlds/indoor_world.sdf
+
+tags:
+  # --- column W (x = -3.30) ---
+  - {id: 0,  x: -3.30, y: -4.0, lane: W, row: 0}
+  - {id: 1,  x: -3.30, y: -2.4, lane: W, row: 1}
+  - {id: 2,  x: -3.30, y: -0.8, lane: W, row: 2}
+  - {id: 3,  x: -3.30, y:  0.8, lane: W, row: 3}
+  - {id: 4,  x: -3.30, y:  2.4, lane: W, row: 4}
+  - {id: 5,  x: -3.30, y:  4.0, lane: W, row: 5}
+  # --- column M (x = -0.22) ---
+  - {id: 6,  x: -0.22, y: -4.0, lane: M, row: 0}
+  - {id: 7,  x: -0.22, y: -2.4, lane: M, row: 1}
+  - {id: 8,  x: -0.22, y: -0.8, lane: M, row: 2}
+  - {id: 9,  x: -0.22, y:  0.8, lane: M, row: 3}
+  - {id: 10, x: -0.22, y:  2.4, lane: M, row: 4}
+  - {id: 11, x: -0.22, y:  4.0, lane: M, row: 5}
+  # --- column E (x = +3.80) ---
+  - {id: 12, x:  3.80, y: -4.0, lane: E, row: 0}
+  - {id: 13, x:  3.80, y: -2.4, lane: E, row: 1}
+  - {id: 14, x:  3.80, y: -0.8, lane: E, row: 2}
+  - {id: 15, x:  3.80, y:  0.8, lane: E, row: 3}
+  - {id: 16, x:  3.80, y:  2.4, lane: E, row: 4}
+  - {id: 17, x:  3.80, y:  4.0, lane: E, row: 5}
+  # --- connectors ---
+  - {id: 18, x: -1.76, y:  0.8, lane: WM, row: 3}
+  - {id: 19, x:  1.79, y: -0.8, lane: ME, row: 2}

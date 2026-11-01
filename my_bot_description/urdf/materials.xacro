@@ -1,0 +1,24 @@
+<?xml version="1.0" ?>
+<robot name="ros_bot" xmlns:xacro="http://www.ros.org/wiki/xacro" >
+
+<material name="silver">
+  <color rgba="0.700 0.700 0.700 1.000"/>
+</material>
+
+  <!-- Robot Body (Blue) -->
+<material name="body_blue">
+  <color rgba="0.0 0.2 0.8 1.0"/> <!-- Deep Blue -->
+</material>
+
+  <!-- Lidar (Red) -->
+<material name="lidar_red">
+  <color rgba="0.8 0.0 0.0 1.0"/> <!-- Bright Red -->
+</material>
+
+  <!-- Wheels & Camera (Black) -->
+<material name="black">
+  <color rgba="0.700 0.700 0.700 1.000"/>
+</material>
+
+
+</robot>
