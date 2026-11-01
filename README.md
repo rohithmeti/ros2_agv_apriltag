@@ -134,3 +134,8 @@ New IDs above 19 also need their image in `models/apriltag_36h11_000XX/materials
 | `config/apriltag_layout.yaml` | tag ids + floor positions |
 | `scripts/place_apriltags.py` | layout yaml -> tag models + world tag block |
 | `models/apriltag_36h11_000XX/` | one Gazebo model per tag (texture + sdf) |
+
+
+
+
+# SOON WILL UPDATE WITH AGV NAVIGATION STACK !
