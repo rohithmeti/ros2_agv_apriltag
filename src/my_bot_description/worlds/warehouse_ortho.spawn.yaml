@@ -1,0 +1,5 @@
+# AGV start pose for warehouse_ortho.sdf: on tag 1, facing along a lane
+x: 0.0
+y: 0.75
+yaw: 1.5708
+tag: 1

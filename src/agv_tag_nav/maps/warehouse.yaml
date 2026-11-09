@@ -1,0 +1,9 @@
+# Warehouse occupancy map (SLAM map made earlier with a lidar robot). Origin already shifted into the Gazebo WORLD frame:
+# old origin (-29.6, -15.0) + fitted translation (13.55, -10.00); fit error ~0.15 m (shelf edges vs the world file).
+image: warehouse.pgm
+mode: trinary
+resolution: 0.05
+origin: [-16.05, -25.00, 0]
+negate: 0
+occupied_thresh: 0.65
+free_thresh: 0.25

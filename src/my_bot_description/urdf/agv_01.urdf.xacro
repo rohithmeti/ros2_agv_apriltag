@@ -1,0 +1,210 @@
+<?xml version="1.0"?>
+<!--
+  agv_01 - simulation-ready version of the concept model agv_01.urdf (600 L x 450 W x 320 H mm).
+  Geometry, masses and positions of the concept model are kept. Changes for use in Gazebo + the AprilTag stack:
+    * base_footprint root frame (stack uses it), base_link stays at floor level
+    * inertial origins moved to the geometry (rails/panels/top cover were at floor level), inertia tensors from shapes
+    * side panels get collision (body was hollow to the physics)
+    * casters get near-zero friction, drive wheels high friction
+    * added: diff-drive + joint-state plugins (wheel separation 0.47, radius 0.10), lidar, front camera (lens face,
+      35 deg down), DOWN camera under the plate centre (140 deg), optical frames
+  Frames/topics are the same as the first robot: lidar_1, camera_front_optical_frame, camera_down_optical_frame,
+  /scan /camera/image_raw /camera_down/image_raw /cmd_vel /odom.
+-->
+<robot name="agv_01" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <material name="aluminium"><color rgba="0.68 0.72 0.76 1"/></material>
+  <material name="dark_panel"><color rgba="0.09 0.11 0.14 1"/></material>
+  <material name="black"><color rgba="0.025 0.03 0.035 1"/></material>
+  <material name="rubber"><color rgba="0.08 0.08 0.08 1"/></material>
+  <material name="blue"><color rgba="0.0 0.65 1.0 1"/></material>
+  <material name="red"><color rgba="0.9 0.03 0.04 1"/></material>
+  <material name="sensor"><color rgba="0.18 0.22 0.26 1"/></material>
+
+  <!-- ===== key numbers ===== -->
+  <xacro:property name="wheel_r" value="0.10"/>
+  <xacro:property name="wheel_w" value="0.045"/>
+  <xacro:property name="wheel_y" value="0.235"/>     <!-- axle centre to wheel centre -> separation 0.47 -->
+  <xacro:property name="plate_z" value="0.105"/>
+  <xacro:property name="plate_t" value="0.035"/>     <!-- underside of the plate = 0.0875 m above floor -->
+  <xacro:property name="cam_down_z" value="0.070"/>  <!-- down camera lens height above floor -->
+  <xacro:property name="lidar_z" value="0.291"/>     <!-- scan plane: above the e-stop button (top 0.275) -->
+
+  <!-- box part whose mass sits at its geometry; jxyz = joint origin, vz = geometry height in the link -->
+  <xacro:macro name="box_part" params="name jxyz vz sx sy sz mass mat col:=true">
+    <link name="${name}">
+      <inertial>
+        <origin xyz="0 0 ${vz}"/><mass value="${mass}"/>
+        <inertia ixx="${mass*(sy*sy+sz*sz)/12}" ixy="0" ixz="0" iyy="${mass*(sx*sx+sz*sz)/12}" iyz="0" izz="${mass*(sx*sx+sy*sy)/12}"/>
+      </inertial>
+      <visual><origin xyz="0 0 ${vz}"/><geometry><box size="${sx} ${sy} ${sz}"/></geometry><material name="${mat}"/></visual>
+      <xacro:if value="${col}">
+        <collision><origin xyz="0 0 ${vz}"/><geometry><box size="${sx} ${sy} ${sz}"/></geometry></collision>
+      </xacro:if>
+    </link>
+    <joint name="${name}_joint" type="fixed"><parent link="base_link"/><child link="${name}"/><origin xyz="${jxyz}"/></joint>
+  </xacro:macro>
+
+  <!-- ===== frames + chassis plate ===== -->
+  <link name="base_footprint"/>
+  <joint name="base_footprint_joint" type="fixed"><parent link="base_footprint"/><child link="base_link"/><origin xyz="0 0 0"/></joint>
+
+  <link name="base_link">
+    <inertial>
+      <origin xyz="0 0 ${plate_z}"/><mass value="12.0"/>
+      <inertia ixx="0.169" ixy="0" ixz="0" iyy="0.315" iyz="0" izz="0.482"/>   <!-- uniform 0.56 x 0.41 x 0.035 plate -->
+    </inertial>
+    <visual><origin xyz="0 0 ${plate_z}"/><geometry><box size="0.56 0.41 ${plate_t}"/></geometry><material name="dark_panel"/></visual>
+    <collision><origin xyz="0 0 ${plate_z}"/><geometry><box size="0.56 0.41 ${plate_t}"/></geometry></collision>
+  </link>
+
+  <!-- 20x20 mm extrusion perimeter 600 x 450 -->
+  <xacro:box_part name="rail_left"  jxyz="0 0.215 0"  vz="0.17" sx="0.60" sy="0.02" sz="0.02" mass="0.5"  mat="aluminium"/>
+  <xacro:box_part name="rail_right" jxyz="0 -0.215 0" vz="0.17" sx="0.60" sy="0.02" sz="0.02" mass="0.5"  mat="aluminium"/>
+  <xacro:box_part name="rail_front" jxyz="0.29 0 0"   vz="0.17" sx="0.02" sy="0.41" sz="0.02" mass="0.35" mat="aluminium"/>
+  <xacro:box_part name="rail_rear"  jxyz="-0.29 0 0"  vz="0.17" sx="0.02" sy="0.41" sz="0.02" mass="0.35" mat="aluminium"/>
+  <!-- enclosure panels (now with collision) -->
+  <xacro:box_part name="left_panel"  jxyz="0 0.204 0"   vz="0.165" sx="0.54"  sy="0.006" sz="0.115" mass="1.0" mat="dark_panel"/>
+  <xacro:box_part name="right_panel" jxyz="0 -0.204 0"  vz="0.165" sx="0.54"  sy="0.006" sz="0.115" mass="1.0" mat="dark_panel"/>
+  <xacro:box_part name="front_panel" jxyz="0.279 0 0"   vz="0.165" sx="0.006" sy="0.39"  sz="0.115" mass="0.5" mat="dark_panel"/>
+  <xacro:box_part name="rear_panel"  jxyz="-0.279 0 0"  vz="0.165" sx="0.006" sy="0.39"  sz="0.115" mass="0.5" mat="dark_panel"/>
+  <xacro:box_part name="top_cover"   jxyz="0 0 0"       vz="0.245" sx="0.56"  sy="0.41"  sz="0.012" mass="2.0" mat="black"/>
+  <!-- internal electronics (mass at their joint origin; no collision) -->
+  <xacro:box_part name="raspberry_pi_link" jxyz="-0.08 0.08 0.14"  vz="0" sx="0.09" sy="0.06" sz="0.015" mass="0.08" mat="blue"  col="false"/>
+  <xacro:box_part name="motor_driver_link" jxyz="0.10 0.08 0.14"   vz="0" sx="0.12" sy="0.08" sz="0.025" mass="0.25" mat="black" col="false"/>
+  <xacro:box_part name="battery_link"      jxyz="-0.08 -0.07 0.14" vz="0" sx="0.20" sy="0.12" sz="0.055" mass="2.0"  mat="dark_panel" col="false"/>
+  <xacro:box_part name="dc_dc_link"        jxyz="0.13 -0.07 0.14"  vz="0" sx="0.08" sy="0.06" sz="0.025" mass="0.18" mat="red"   col="false"/>
+
+  <!-- emergency stop button on the top cover (z 0.251 .. 0.275) -->
+  <link name="emergency_stop_link">
+    <inertial><origin xyz="0 0 0.012"/><mass value="0.06"/><inertia ixx="0.00001" ixy="0" ixz="0" iyy="0.00001" iyz="0" izz="0.00001"/></inertial>
+    <visual><origin xyz="0 0 0.012"/><geometry><cylinder radius="0.022" length="0.024"/></geometry><material name="red"/></visual>
+  </link>
+  <joint name="emergency_stop_joint" type="fixed"><parent link="base_link"/><child link="emergency_stop_link"/><origin xyz="0.20 0.14 0.251"/></joint>
+
+  <!-- ===== drive wheels: spin axis = y, so iyy is the large inertia ===== -->
+  <xacro:macro name="drive_wheel" params="side y">
+    <link name="${side}_drive_wheel">
+      <inertial><mass value="2.0"/>
+        <inertia ixx="${2.0*(3*wheel_r*wheel_r+wheel_w*wheel_w)/12}" ixy="0" ixz="0" iyy="${0.5*2.0*wheel_r*wheel_r}" iyz="0" izz="${2.0*(3*wheel_r*wheel_r+wheel_w*wheel_w)/12}"/>
+      </inertial>
+      <visual><origin rpy="${pi/2} 0 0"/><geometry><cylinder radius="${wheel_r}" length="${wheel_w}"/></geometry><material name="rubber"/></visual>
+      <collision><origin rpy="${pi/2} 0 0"/><geometry><cylinder radius="${wheel_r}" length="${wheel_w}"/></geometry></collision>
+    </link>
+    <joint name="${side}_drive_joint" type="continuous">
+      <parent link="base_link"/><child link="${side}_drive_wheel"/>
+      <origin xyz="0 ${y} ${wheel_r}"/><axis xyz="0 1 0"/>
+      <limit effort="80" velocity="20"/><dynamics damping="0.05" friction="0.02"/>
+    </joint>
+  </xacro:macro>
+  <xacro:drive_wheel side="left"  y="${wheel_y}"/>
+  <xacro:drive_wheel side="right" y="${-wheel_y}"/>
+
+  <!-- ===== four ball casters (low friction in the gazebo section) ===== -->
+  <xacro:macro name="caster" params="name x y">
+    <link name="${name}">
+      <inertial><mass value="0.35"/><inertia ixx="0.0003" ixy="0" ixz="0" iyy="0.0003" iyz="0" izz="0.0003"/></inertial>
+      <visual><geometry><sphere radius="0.045"/></geometry><material name="aluminium"/></visual>
+      <visual><origin xyz="0 0 0.04"/><geometry><cylinder radius="0.035" length="0.03"/></geometry><material name="sensor"/></visual>
+      <collision><geometry><sphere radius="0.045"/></geometry></collision>
+    </link>
+    <joint name="${name}_joint" type="fixed"><parent link="base_link"/><child link="${name}"/><origin xyz="${x} ${y} 0.045"/></joint>
+  </xacro:macro>
+  <xacro:caster name="caster_front_left"  x="0.235"  y="0.16"/>
+  <xacro:caster name="caster_front_right" x="0.235"  y="-0.16"/>
+  <xacro:caster name="caster_rear_left"   x="-0.235" y="0.16"/>
+  <xacro:caster name="caster_rear_right"  x="-0.235" y="-0.16"/>
+
+  <!-- ===== sensors. Camera link origin = lens, +x = viewing direction (Gazebo); optical frame z forward, x right, y down ===== -->
+  <xacro:macro name="camera" params="name xyz rpy">
+    <link name="${name}_link">
+      <inertial><origin xyz="-0.02 0 0"/><mass value="0.08"/><inertia ixx="0.00003" ixy="0" ixz="0" iyy="0.00003" iyz="0" izz="0.00003"/></inertial>
+      <visual><origin xyz="-0.0275 0 0"/><geometry><box size="0.055 0.045 0.035"/></geometry><material name="sensor"/></visual>
+    </link>
+    <joint name="${name}_joint" type="fixed"><parent link="base_link"/><child link="${name}_link"/><origin xyz="${xyz}" rpy="${rpy}"/></joint>
+    <link name="${name}_optical_frame"/>
+    <joint name="${name}_optical_joint" type="fixed"><parent link="${name}_link"/><child link="${name}_optical_frame"/><origin xyz="0 0 0" rpy="${-pi/2} 0 ${-pi/2}"/></joint>
+  </xacro:macro>
+  <!-- front: lens 1.8 cm ahead of the front rail, 35 deg down -->
+  <xacro:camera name="camera_front" xyz="0.318 0 0.17" rpy="0 0.6108652382 0"/>
+  <!-- down: under the plate centre (= axle centre, so it stays over a tag while turning in place), looking straight down -->
+  <xacro:camera name="camera_down" xyz="0 0 ${cam_down_z}" rpy="0 ${pi/2} 0"/>
+
+  <link name="lidar_1">
+    <inertial><mass value="0.35"/><inertia ixx="0.001" ixy="0" ixz="0" iyy="0.001" iyz="0" izz="0.001"/></inertial>
+    <visual><origin xyz="0 0 -0.012"/><geometry><cylinder radius="0.055" length="0.056"/></geometry><material name="sensor"/></visual>
+    <visual><origin xyz="0 0 0.018"/><geometry><cylinder radius="0.047" length="0.006"/></geometry><material name="blue"/></visual>
+  </link>
+  <joint name="lidar_joint" type="fixed"><parent link="base_link"/><child link="lidar_1"/><origin xyz="0 0 ${lidar_z}"/></joint>
+
+  <!-- ===== Gazebo ===== -->
+  <gazebo>
+    <plugin filename="libignition-gazebo-diff-drive-system.so" name="ignition::gazebo::systems::DiffDrive">
+      <left_joint>left_drive_joint</left_joint>
+      <right_joint>right_drive_joint</right_joint>
+      <wheel_separation>${2*wheel_y}</wheel_separation>
+      <wheel_radius>${wheel_r}</wheel_radius>
+      <topic>/cmd_vel</topic>
+      <odom_publish_frequency>20</odom_publish_frequency>
+      <frame_id>odom</frame_id>
+      <child_frame_id>base_footprint</child_frame_id>
+    </plugin>
+    <plugin filename="libignition-gazebo-joint-state-publisher-system.so" name="ignition::gazebo::systems::JointStatePublisher">
+      <topic>/joint_states</topic>
+    </plugin>
+  </gazebo>
+
+  <gazebo reference="caster_front_left"><mu1>0.001</mu1><mu2>0.001</mu2></gazebo>
+  <gazebo reference="caster_front_right"><mu1>0.001</mu1><mu2>0.001</mu2></gazebo>
+  <gazebo reference="caster_rear_left"><mu1>0.001</mu1><mu2>0.001</mu2></gazebo>
+  <gazebo reference="caster_rear_right"><mu1>0.001</mu1><mu2>0.001</mu2></gazebo>
+  <gazebo reference="left_drive_wheel"><mu1>1.0</mu1><mu2>1.0</mu2></gazebo>
+  <gazebo reference="right_drive_wheel"><mu1>1.0</mu1><mu2>1.0</mu2></gazebo>
+
+  <gazebo reference="lidar_1">
+    <sensor name="lidar" type="gpu_lidar">
+      <pose>0 0 0 0 0 0</pose>
+      <topic>/scan</topic>
+      <update_rate>10</update_rate>
+      <ignition_frame_id>lidar_1</ignition_frame_id>
+      <ray>
+        <scan><horizontal><samples>720</samples><resolution>1</resolution><min_angle>-3.14159</min_angle><max_angle>3.14159</max_angle></horizontal></scan>
+        <range><min>0.15</min><max>12.0</max><resolution>0.01</resolution></range>
+      </ray>
+      <always_on>1</always_on>
+      <visualize>false</visualize>
+    </sensor>
+  </gazebo>
+
+  <gazebo reference="camera_front_link">
+    <sensor name="camera_front" type="camera">
+      <topic>/camera/image_raw</topic>
+      <update_rate>30</update_rate>
+      <ignition_frame_id>camera_front_optical_frame</ignition_frame_id>
+      <camera>
+        <horizontal_fov>1.3962634</horizontal_fov>   <!-- 80 deg -->
+        <image><width>800</width><height>800</height><format>R8G8B8</format></image>
+        <clip><near>0.02</near><far>300</far></clip>
+      </camera>
+      <always_on>1</always_on>
+      <visualize>false</visualize>
+    </sensor>
+  </gazebo>
+
+  <!-- Down camera: lens 0.07 m above floor, 140 deg -> floor footprint 2*0.07*tan(70 deg) = 0.385 m,
+       a 0.25 m tag (black + border) has 6.8 cm slack each side -->
+  <gazebo reference="camera_down_link">
+    <sensor name="camera_down" type="camera">
+      <topic>/camera_down/image_raw</topic>
+      <update_rate>30</update_rate>
+      <ignition_frame_id>camera_down_optical_frame</ignition_frame_id>
+      <camera>
+        <horizontal_fov>2.443461</horizontal_fov>    <!-- 140 deg -->
+        <image><width>640</width><height>640</height><format>R8G8B8</format></image>
+        <clip><near>0.02</near><far>10</far></clip>
+      </camera>
+      <always_on>1</always_on>
+      <visualize>false</visualize>
+    </sensor>
+  </gazebo>
+</robot>

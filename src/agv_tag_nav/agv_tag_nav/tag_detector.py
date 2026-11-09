@@ -56,6 +56,8 @@ class TagDetector(Node):
                 T = np.eye(4)
                 T[:3, :3] = cv2.Rodrigues(rv[0])[0]
                 T[:3, 3] = tv[0].ravel()
+                if not np.isfinite(T).all() or T[2, 3] <= 0:        # degenerate pose (tag at the image edge): skip
+                    continue
                 tfs.append(mat_to_tf(T, m.header.frame_id, f'det_{cam}_{int(i)}', m.header.stamp))
                 found.append({'id': int(i), 'range': float(np.linalg.norm(T[:3, 3])), 'err_px': float(err[0])})
         if tfs:

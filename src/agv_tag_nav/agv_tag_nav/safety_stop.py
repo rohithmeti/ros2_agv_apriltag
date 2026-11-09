@@ -7,6 +7,7 @@ Footprint = the robot body rectangle (0.40 x 0.30 m, centred on base_footprint, 
  * driving forward : a corridor as wide as the footprint ahead of the nose; length = braking distance
                      (margin + v*latency + v^2/2a). Obstacle inside -> v = 0, inside the slow band -> v scaled down.
  * rotating        : the footprint is swept by the commanded rotation; a scan point in the swept area blocks rotation.
+ * speed is capped (max_linear 0.5 m/s, max_angular 1.0 rad/s) so the braking distance stays small
  * no scan / no command for a while -> stop (fail-safe).
 """
 import math
@@ -36,6 +37,8 @@ class SafetyStop(Node):
         self.latency = p('latency', 0.25).value
         self.slow_band = p('slow_band', 0.40).value
         self.max_range = p('max_range', 3.0).value
+        self.v_cap = p('max_linear', 0.5).value                     # speed caps: Gazebo's keyboard panel can ask for >1.5 m/s,
+        self.w_cap = p('max_angular', 1.0).value                    # whose braking distance (v^2/2a) would exceed 2 m
         self.scan_timeout = p('scan_timeout', 0.5).value
         self.cmd_timeout = p('cmd_timeout', 0.5).value
         self.base = p('base_frame', 'base_footprint').value
@@ -96,6 +99,8 @@ class SafetyStop(Node):
         scan_ok = self.scan_t is not None and (now - self.scan_t).nanoseconds * 1e-9 < self.scan_timeout
         cmd_ok = self.cmd_t is not None and (now - self.cmd_t).nanoseconds * 1e-9 < self.cmd_timeout
         v, w = (self.cmd.linear.x, self.cmd.angular.z) if cmd_ok else (0.0, 0.0)
+        v = max(-self.v_cap, min(self.v_cap, v))
+        w = max(-self.w_cap, min(self.w_cap, w))
         stop_d = self.margin + abs(v) * self.latency + v * v / (2 * self.decel)
         if not scan_ok:
             if cmd_ok and (v or w):
@@ -108,7 +113,7 @@ class SafetyStop(Node):
                     v, why = 0.0, f'obstacle {d:.2f} m ahead'
                 elif d < stop_d + self.slow_band:
                     v *= (d - stop_d) / self.slow_band
-                    if v < 0.05 * self.cmd.linear.x:                # crawling to a halt = blocked
+                    if v < 0.05 * min(self.cmd.linear.x, self.v_cap):                # crawling to a halt = blocked
                         why = f'obstacle {d:.2f} m ahead'
             elif v < 0:                                            # no rear scan guarantee: allow only creeping
                 v = max(v, -0.05)

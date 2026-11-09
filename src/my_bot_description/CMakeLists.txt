@@ -14,7 +14,7 @@ find_package(xacro REQUIRED)
 # CRITICAL FIX: Install the launch and urdf directories
 # =========================================================
 
-install(DIRECTORY launch urdf meshes worlds rviz models config
+install(DIRECTORY launch urdf worlds models
   DESTINATION share/${PROJECT_NAME}
 )
 

@@ -3,7 +3,7 @@
 <package format="3">
   <name>my_bot_description</name>
   <version>0.0.0</version>
-  <description>Simulation of a differential-drive AGV (2 cameras + lidar) in an indoor room with 20 AprilTags on the floor (Ignition Gazebo Fortress)</description>
+  <description>VERSION 2 simulation: agv_01 (differential drive, front + down camera, lidar) in the Gazebo warehouse with an AprilTag floor grid</description>
   <maintainer email="rohithmeti03@gmail.com">rohith</maintainer>
   <license>Apache-2.0</license>
 

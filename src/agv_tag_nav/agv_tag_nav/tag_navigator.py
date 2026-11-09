@@ -34,7 +34,7 @@ class TagNavigator(Node):
         self.lookahead = p('lookahead', 0.35).value
         self.centre_dist = p('centre_dist', 0.30).value             # switch to down-camera centring inside this
         self.tol = p('node_tol', 0.02).value                        # m, accepted when centred by the down camera
-        self.tol_map = p('node_tol_map', 0.06).value                # m, when only the map pose is available
+        self.tol_map = p('node_tol_map', 0.03).value                # m, map-pose fallback; must stay below the down camera's capture zone (~6 cm) so it keeps creeping until the tag is seen
         self.turn_tol = p('turn_tol', 0.05).value
         self.buf = Buffer()
         TransformListener(self.buf, self, spin_thread=True)
@@ -125,6 +125,8 @@ class TagNavigator(Node):
             self.state = 'TURN'
         if self.state == 'CENTRE':
             e = self.down_error(tid)
+            self.get_logger().info(f'centre on tag {tid}: down camera {"none" if e is None else f"ex={e[0]:+.3f} ey={e[1]:+.3f}"}, map distance {d:.3f}',
+                                   throttle_duration_sec=0.5)
             if e is None:
                 if d < self.tol_map:
                     return self.reached(tid)

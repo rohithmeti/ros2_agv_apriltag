@@ -85,7 +85,9 @@ class TagLocalizer(Node):
             self.off = new
             self.get_logger().info(f'localised from tag {best["id"]} ({cam}): robot at ({bx:.2f}, {by:.2f}, {math.degrees(byaw):.0f} deg)')
         else:
-            if math.hypot(new[0] - self.off[0], new[1] - self.off[1]) > self.jump:
+            # a down-camera fix (tag centred under the robot, <0.2 m) is exact: always accept it, even a big jump,
+            # so a drifted estimate is repaired by the next tag the robot drives over. Far/front fixes still get the jump check.
+            if cam != 'down' and math.hypot(new[0] - self.off[0], new[1] - self.off[1]) > self.jump:
                 self.rejects += 1
                 if self.rejects < self.jump_n:
                     return True

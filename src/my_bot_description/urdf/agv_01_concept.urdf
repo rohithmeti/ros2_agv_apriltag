@@ -1,0 +1,103 @@
+<?xml version="1.0"?>
+<robot name="agv_01">
+  <!-- AGV-01 concept model: 600 L x 450 W x 320 H mm. Units are metres. -->
+  <material name="aluminium"><color rgba="0.68 0.72 0.76 1"/></material>
+  <material name="dark_panel"><color rgba="0.09 0.11 0.14 1"/></material>
+  <material name="black"><color rgba="0.025 0.03 0.035 1"/></material>
+  <material name="rubber"><color rgba="0.08 0.08 0.08 1"/></material>
+  <material name="blue"><color rgba="0.0 0.65 1.0 1"/></material>
+  <material name="red"><color rgba="0.9 0.03 0.04 1"/></material>
+  <material name="sensor"><color rgba="0.18 0.22 0.26 1"/></material>
+
+  <!-- Chassis origin is at the geometric centre of the base footprint, at floor level. -->
+  <link name="base_link">
+    <inertial><origin xyz="0 0 0.105"/><mass value="12.0"/><inertia ixx="0.45" ixy="0" ixz="0" iyy="0.75" iyz="0" izz="0.95"/></inertial>
+    <visual><origin xyz="0 0 0.105"/><geometry><box size="0.56 0.41 0.035"/></geometry><material name="dark_panel"/></visual>
+    <collision><origin xyz="0 0 0.105"/><geometry><box size="0.56 0.41 0.035"/></geometry></collision>
+  </link>
+
+  <!-- 20x20 mm aluminium extrusion perimeter: outer size 600 x 450 mm -->
+  <link name="rail_left"><inertial><mass value="0.5"/><inertia ixx="0.01" ixy="0" ixz="0" iyy="0.01" iyz="0" izz="0.01"/></inertial><visual><origin xyz="0 0 0.17"/><geometry><box size="0.60 0.02 0.02"/></geometry><material name="aluminium"/></visual><collision><origin xyz="0 0 0.17"/><geometry><box size="0.60 0.02 0.02"/></geometry></collision></link>
+  <joint name="rail_left_joint" type="fixed"><parent link="base_link"/><child link="rail_left"/><origin xyz="0 0.215 0"/></joint>
+  <link name="rail_right"><inertial><mass value="0.5"/><inertia ixx="0.01" ixy="0" ixz="0" iyy="0.01" iyz="0" izz="0.01"/></inertial><visual><origin xyz="0 0 0.17"/><geometry><box size="0.60 0.02 0.02"/></geometry><material name="aluminium"/></visual><collision><origin xyz="0 0 0.17"/><geometry><box size="0.60 0.02 0.02"/></geometry></collision></link>
+  <joint name="rail_right_joint" type="fixed"><parent link="base_link"/><child link="rail_right"/><origin xyz="0 -0.215 0"/></joint>
+  <link name="rail_front"><inertial><mass value="0.35"/><inertia ixx="0.01" ixy="0" ixz="0" iyy="0.01" iyz="0" izz="0.01"/></inertial><visual><origin xyz="0 0 0.17"/><geometry><box size="0.02 0.41 0.02"/></geometry><material name="aluminium"/></visual><collision><origin xyz="0 0 0.17"/><geometry><box size="0.02 0.41 0.02"/></geometry></collision></link>
+  <joint name="rail_front_joint" type="fixed"><parent link="base_link"/><child link="rail_front"/><origin xyz="0.29 0 0"/></joint>
+  <link name="rail_rear"><inertial><mass value="0.35"/><inertia ixx="0.01" ixy="0" ixz="0" iyy="0.01" iyz="0" izz="0.01"/></inertial><visual><origin xyz="0 0 0.17"/><geometry><box size="0.02 0.41 0.02"/></geometry><material name="aluminium"/></visual><collision><origin xyz="0 0 0.17"/><geometry><box size="0.02 0.41 0.02"/></geometry></collision></link>
+  <joint name="rail_rear_joint" type="fixed"><parent link="base_link"/><child link="rail_rear"/><origin xyz="-0.29 0 0"/></joint>
+
+  <!-- Dark side enclosure panels -->
+  <link name="left_panel"><inertial><mass value="1.0"/><inertia ixx="0.02" ixy="0" ixz="0" iyy="0.02" iyz="0" izz="0.02"/></inertial><visual><origin xyz="0 0 0.165"/><geometry><box size="0.54 0.006 0.115"/></geometry><material name="dark_panel"/></visual></link>
+  <joint name="left_panel_joint" type="fixed"><parent link="base_link"/><child link="left_panel"/><origin xyz="0 0.204 0"/></joint>
+  <link name="right_panel"><inertial><mass value="1.0"/><inertia ixx="0.02" ixy="0" ixz="0" iyy="0.02" iyz="0" izz="0.02"/></inertial><visual><origin xyz="0 0 0.165"/><geometry><box size="0.54 0.006 0.115"/></geometry><material name="dark_panel"/></visual></link>
+  <joint name="right_panel_joint" type="fixed"><parent link="base_link"/><child link="right_panel"/><origin xyz="0 -0.204 0"/></joint>
+  <link name="front_panel"><inertial><mass value="0.5"/><inertia ixx="0.01" ixy="0" ixz="0" iyy="0.01" iyz="0" izz="0.01"/></inertial><visual><origin xyz="0 0 0.165"/><geometry><box size="0.006 0.39 0.115"/></geometry><material name="dark_panel"/></visual></link>
+  <joint name="front_panel_joint" type="fixed"><parent link="base_link"/><child link="front_panel"/><origin xyz="0.279 0 0"/></joint>
+  <link name="rear_panel"><inertial><mass value="0.5"/><inertia ixx="0.01" ixy="0" ixz="0" iyy="0.01" iyz="0" izz="0.01"/></inertial><visual><origin xyz="0 0 0.165"/><geometry><box size="0.006 0.39 0.115"/></geometry><material name="dark_panel"/></visual></link>
+  <joint name="rear_panel_joint" type="fixed"><parent link="base_link"/><child link="rear_panel"/><origin xyz="-0.279 0 0"/></joint>
+
+  <!-- Top cover -->
+  <link name="top_cover"><inertial><mass value="2.0"/><inertia ixx="0.1" ixy="0" ixz="0" iyy="0.1" iyz="0" izz="0.1"/></inertial><visual><origin xyz="0 0 0.245"/><geometry><box size="0.56 0.41 0.012"/></geometry><material name="black"/></visual><collision><origin xyz="0 0 0.245"/><geometry><box size="0.56 0.41 0.012"/></geometry></collision></link>
+  <joint name="top_cover_joint" type="fixed"><parent link="base_link"/><child link="top_cover"/><origin xyz="0 0 0"/></joint>
+
+  <!-- Differential drive wheels. Cylinder local axis is rotated to align with Y. -->
+  <link name="left_drive_wheel"><inertial><origin xyz="0 0 0"/><mass value="2.0"/><inertia ixx="0.012" ixy="0" ixz="0" iyy="0.006" iyz="0" izz="0.012"/></inertial><visual><origin rpy="1.57079632679 0 0"/><geometry><cylinder radius="0.10" length="0.045"/></geometry><material name="rubber"/></visual><collision><origin rpy="1.57079632679 0 0"/><geometry><cylinder radius="0.10" length="0.045"/></geometry></collision></link>
+  <joint name="left_drive_joint" type="continuous"><parent link="base_link"/><child link="left_drive_wheel"/><origin xyz="0 0.235 0.10"/><axis xyz="0 1 0"/><limit effort="80" velocity="20"/><dynamics damping="0.05" friction="0.02"/></joint>
+  <link name="right_drive_wheel"><inertial><origin xyz="0 0 0"/><mass value="2.0"/><inertia ixx="0.012" ixy="0" ixz="0" iyy="0.006" iyz="0" izz="0.012"/></inertial><visual><origin rpy="1.57079632679 0 0"/><geometry><cylinder radius="0.10" length="0.045"/></geometry><material name="rubber"/></visual><collision><origin rpy="1.57079632679 0 0"/><geometry><cylinder radius="0.10" length="0.045"/></geometry></collision></link>
+  <joint name="right_drive_joint" type="continuous"><parent link="base_link"/><child link="right_drive_wheel"/><origin xyz="0 -0.235 0.10"/><axis xyz="0 1 0"/><limit effort="80" velocity="20"/><dynamics damping="0.05" friction="0.02"/></joint>
+
+  <!-- Four ball caster assemblies for isotropic omnidirectional stability -->
+  <link name="caster_front_left">
+    <inertial><mass value="0.35"/><inertia ixx="0.001" ixy="0" ixz="0" iyy="0.001" iyz="0" izz="0.001"/></inertial>
+    <visual><origin xyz="0 0 0.025" rpy="0 0 0"/><geometry><cylinder radius="0.035" length="0.03"/></geometry><material name="sensor"/></visual>
+    <visual><origin xyz="0 0 0" rpy="0 0 0"/><geometry><sphere radius="0.045"/></geometry><material name="aluminium"/></visual>
+    <collision><origin xyz="0 0 0" rpy="0 0 0"/><geometry><sphere radius="0.045"/></geometry></collision>
+  </link>
+  <joint name="caster_front_left_joint" type="fixed"><parent link="base_link"/><child link="caster_front_left"/><origin xyz="0.235 0.16 0.045"/></joint>
+
+  <link name="caster_front_right">
+    <inertial><mass value="0.35"/><inertia ixx="0.001" ixy="0" ixz="0" iyy="0.001" iyz="0" izz="0.001"/></inertial>
+    <visual><origin xyz="0 0 0.025" rpy="0 0 0"/><geometry><cylinder radius="0.035" length="0.03"/></geometry><material name="sensor"/></visual>
+    <visual><origin xyz="0 0 0" rpy="0 0 0"/><geometry><sphere radius="0.045"/></geometry><material name="aluminium"/></visual>
+    <collision><origin xyz="0 0 0" rpy="0 0 0"/><geometry><sphere radius="0.045"/></geometry></collision>
+  </link>
+  <joint name="caster_front_right_joint" type="fixed"><parent link="base_link"/><child link="caster_front_right"/><origin xyz="0.235 -0.16 0.045"/></joint>
+
+  <link name="caster_rear_left">
+    <inertial><mass value="0.35"/><inertia ixx="0.001" ixy="0" ixz="0" iyy="0.001" iyz="0" izz="0.001"/></inertial>
+    <visual><origin xyz="0 0 0.025" rpy="0 0 0"/><geometry><cylinder radius="0.035" length="0.03"/></geometry><material name="sensor"/></visual>
+    <visual><origin xyz="0 0 0" rpy="0 0 0"/><geometry><sphere radius="0.045"/></geometry><material name="aluminium"/></visual>
+    <collision><origin xyz="0 0 0" rpy="0 0 0"/><geometry><sphere radius="0.045"/></geometry></collision>
+  </link>
+  <joint name="caster_rear_left_joint" type="fixed"><parent link="base_link"/><child link="caster_rear_left"/><origin xyz="-0.235 0.16 0.045"/></joint>
+
+  <link name="caster_rear_right">
+    <inertial><mass value="0.35"/><inertia ixx="0.001" ixy="0" ixz="0" iyy="0.001" iyz="0" izz="0.001"/></inertial>
+    <visual><origin xyz="0 0 0.025" rpy="0 0 0"/><geometry><cylinder radius="0.035" length="0.03"/></geometry><material name="sensor"/></visual>
+    <visual><origin xyz="0 0 0" rpy="0 0 0"/><geometry><sphere radius="0.045"/></geometry><material name="aluminium"/></visual>
+    <collision><origin xyz="0 0 0" rpy="0 0 0"/><geometry><sphere radius="0.045"/></geometry></collision>
+  </link>
+  <joint name="caster_rear_right_joint" type="fixed"><parent link="base_link"/><child link="caster_rear_right"/><origin xyz="-0.235 -0.16 0.045"/></joint>
+  <!-- LiDAR at the centre of the top cover -->
+  <link name="lidar_link"><inertial><mass value="0.35"/><inertia ixx="0.001" ixy="0" ixz="0" iyy="0.001" iyz="0" izz="0.001"/></inertial><visual><origin xyz="0 0 0.028"/><geometry><cylinder radius="0.055" length="0.056"/></geometry><material name="sensor"/></visual><visual><origin xyz="0 0 0.058"/><geometry><cylinder radius="0.047" length="0.006"/></geometry><material name="blue"/></visual></link>
+  <joint name="lidar_joint" type="fixed"><parent link="base_link"/><child link="lidar_link"/><origin xyz="0 0 0.251"/></joint>
+
+  <!-- Forward/downward-facing camera; +X is forward -->
+  <link name="front_camera_link"><inertial><mass value="0.12"/><inertia ixx="0.0002" ixy="0" ixz="0" iyy="0.0002" iyz="0" izz="0.0002"/></inertial><visual><geometry><box size="0.055 0.045 0.035"/></geometry><material name="sensor"/></visual><visual><origin xyz="0.028 0 0" rpy="0 1.57079632679 0"/><geometry><cylinder radius="0.012" length="0.008"/></geometry><material name="black"/></visual></link>
+  <joint name="front_camera_joint" type="fixed"><parent link="base_link"/><child link="front_camera_link"/><origin xyz="0.29 0 0.17" rpy="0 0.6108652382 0"/></joint>
+
+  <!-- Internal electronics blocks: Pi, motor drivers, battery and DC-DC -->
+  <link name="raspberry_pi_link"><inertial><mass value="0.08"/><inertia ixx="0.0001" ixy="0" ixz="0" iyy="0.0001" iyz="0" izz="0.0001"/></inertial><visual><geometry><box size="0.09 0.06 0.015"/></geometry><material name="blue"/></visual></link>
+  <joint name="raspberry_pi_joint" type="fixed"><parent link="base_link"/><child link="raspberry_pi_link"/><origin xyz="-0.08 0.08 0.14"/></joint>
+  <link name="motor_driver_link"><inertial><mass value="0.25"/><inertia ixx="0.001" ixy="0" ixz="0" iyy="0.001" iyz="0" izz="0.001"/></inertial><visual><geometry><box size="0.12 0.08 0.025"/></geometry><material name="black"/></visual></link>
+  <joint name="motor_driver_joint" type="fixed"><parent link="base_link"/><child link="motor_driver_link"/><origin xyz="0.10 0.08 0.14"/></joint>
+  <link name="battery_link"><inertial><mass value="2.0"/><inertia ixx="0.02" ixy="0" ixz="0" iyy="0.02" iyz="0" izz="0.02"/></inertial><visual><geometry><box size="0.20 0.12 0.055"/></geometry><material name="dark_panel"/></visual></link>
+  <joint name="battery_joint" type="fixed"><parent link="base_link"/><child link="battery_link"/><origin xyz="-0.08 -0.07 0.14"/></joint>
+  <link name="dc_dc_link"><inertial><mass value="0.18"/><inertia ixx="0.001" ixy="0" ixz="0" iyy="0.001" iyz="0" izz="0.001"/></inertial><visual><geometry><box size="0.08 0.06 0.025"/></geometry><material name="red"/></visual></link>
+  <joint name="dc_dc_joint" type="fixed"><parent link="base_link"/><child link="dc_dc_link"/><origin xyz="0.13 -0.07 0.14"/></joint>
+
+  <!-- Emergency stop button on the top cover -->
+  <link name="emergency_stop_link"><inertial><mass value="0.06"/><inertia ixx="0.0001" ixy="0" ixz="0" iyy="0.0001" iyz="0" izz="0.0001"/></inertial><visual><origin xyz="0 0 0.012"/><geometry><cylinder radius="0.022" length="0.024"/></geometry><material name="red"/></visual></link>
+  <joint name="emergency_stop_joint" type="fixed"><parent link="base_link"/><child link="emergency_stop_link"/><origin xyz="0.20 0.14 0.251"/></joint>
+
+</robot>
