@@ -1,0 +1,177 @@
+Panels:
+  - Class: rviz_common/Displays
+    Name: Displays
+    Property Tree Widget:
+      Expanded:
+        - /Global Options1
+        - /TF1
+      Splitter Ratio: 0.5
+    Tree Height: 600
+  - Class: rviz_common/Views
+    Name: Views
+    Expanded:
+      - /Current View1
+Visualization Manager:
+  Class: ""
+  Displays:
+    - Class: rviz_default_plugins/Grid
+      Name: Grid
+      Enabled: true
+      Cell Size: 1
+      Plane Cell Count: 14
+      Color: 160; 160; 164
+      Alpha: 0.5
+      Reference Frame: map
+      Normal Cell Count: 0
+      Line Style: {Line Width: 0.03, Value: Lines}
+      Offset: {X: 0, Y: 0, Z: 0}
+      Plane: XY
+    - Class: rviz_default_plugins/MarkerArray
+      Name: Tag graph (nodes + lanes)
+      Enabled: true
+      Namespaces: {}
+      Topic:
+        Value: /agv/graph
+        Depth: 1
+        Durability Policy: Transient Local
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+    - Class: rviz_default_plugins/MarkerArray
+      Name: Route + goal
+      Enabled: true
+      Namespaces: {}
+      Topic:
+        Value: /agv/route_viz
+        Depth: 1
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+    - Class: rviz_default_plugins/MarkerArray
+      Name: Footprint + stop zone
+      Enabled: true
+      Namespaces: {}
+      Topic:
+        Value: /agv/safety_viz
+        Depth: 1
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+    - Class: rviz_default_plugins/RobotModel
+      Name: Robot
+      Enabled: true
+      Description Source: Topic
+      Description Topic:
+        Value: /robot_description
+        Depth: 1
+        Durability Policy: Transient Local
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+      Visual Enabled: true
+      Collision Enabled: false
+      Alpha: 1
+      TF Prefix: ""
+      Update Interval: 0
+      Mass Properties: {Inertia: false, Mass: false}
+    - Class: rviz_default_plugins/TF
+      Name: TF
+      Enabled: true
+      Show Arrows: false
+      Show Axes: true
+      Show Names: false
+      Marker Scale: 0.3
+      Update Interval: 0
+      Frame Timeout: 1
+      Frames:
+        All Enabled: true
+      Tree: {}
+    - Class: rviz_default_plugins/LaserScan
+      Name: Lidar
+      Enabled: true
+      Topic:
+        Value: /scan
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Best Effort
+      Size (m): 0.03
+      Style: Flat Squares
+      Color: 255; 85; 0
+      Color Transformer: FlatColor
+    - Class: rviz_default_plugins/Image
+      Name: Front camera (tags)
+      Enabled: true
+      Topic:
+        Value: /agv/front/tags_debug
+        Depth: 1
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Best Effort
+      Normalize Range: true
+      Median window: 5
+      Max Value: 1
+      Min Value: 0
+    - Class: rviz_default_plugins/Image
+      Name: Down camera (tags)
+      Enabled: true
+      Topic:
+        Value: /agv/down/tags_debug
+        Depth: 1
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Best Effort
+      Normalize Range: true
+      Median window: 5
+      Max Value: 1
+      Min Value: 0
+  Enabled: true
+  Global Options:
+    Background Color: 48; 48; 48
+    Fixed Frame: map
+    Frame Rate: 30
+  Name: root
+  Tools:
+    - Class: rviz_default_plugins/Interact
+      Hide Inactive Objects: true
+    - Class: rviz_default_plugins/MoveCamera
+    - Class: rviz_default_plugins/Select
+    - Class: rviz_default_plugins/SetGoal
+      Topic:
+        Value: /goal_pose
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+    - Class: rviz_default_plugins/PublishPoint
+      Single click: true
+      Topic:
+        Value: /clicked_point
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+  Transformation:
+    Current:
+      Class: rviz_default_plugins/TF
+  Value: true
+  Views:
+    Current:
+      Class: rviz_default_plugins/TopDownOrtho
+      Name: Current View
+      Scale: 70
+      Target Frame: <Fixed Frame>
+      Value: TopDownOrtho (rviz_default_plugins)
+      X: 0
+      Y: 0
+      Invert Z Axis: false
+      Near Clip Distance: 0.01
+      Angle: 0
+    Saved: ~
+Window Geometry:
+  Displays: {collapsed: false}
+  Front camera (tags): {collapsed: false}
+  Down camera (tags): {collapsed: false}
+  Height: 1000
+  Width: 1600
+  Hide Left Dock: false
+  Hide Right Dock: true
+  QMainWindow State: ""

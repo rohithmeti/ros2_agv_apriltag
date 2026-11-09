@@ -1,141 +1,91 @@
-# ros2_agv - AprilTag AGV simulation (ROS 2 Humble + Ignition Gazebo Fortress)
+# ros2_agv - AprilTag AGV navigation (ROS 2 Humble + Ignition Gazebo Fortress)
 
-A differential-drive AGV in an indoor room with **20 AprilTags (36h11, IDs 0-19) on the floor**,
-laid out in lanes for camera-based topological navigation. The robot has a lidar, a
-front camera tilted down at the floor, and a downward camera under the chassis.
+A differential-drive AGV that navigates **only with AprilTags**. Tags (family 36h11, ids 0-19) lie on the floor of a simulated
+room. Each tag is a **node** of the AGV's internal map, each lane between two tags is an **edge**. Two cameras (front and
+underneath) detect the tags, TF turns the detections into the robot's pose, Dijkstra finds the shortest path over the
+nodes, and a lidar gate stops the robot for obstacles. Give a goal by tapping a tag in RViz.
 
-Package: `my_bot_description`
+Author: rohith (rohithmeti03@gmail.com)
 
 ## 1. Requirements
-
-Ubuntu 22.04 + ROS 2 Humble, then:
-
+Ubuntu 22.04 with **ROS 2 Humble** (`ros-humble-desktop`), then:
 ```bash
-sudo apt install ros-humble-ros-gz ros-humble-xacro ros-humble-robot-state-publisher \
-  ros-humble-nav2-bringup ros-humble-teleop-twist-keyboard ros-humble-rqt-image-view
+sudo apt update
+sudo apt install -y python3-colcon-common-extensions python3-rosdep \
+  ros-humble-ros-gz ros-humble-xacro ros-humble-robot-state-publisher ros-humble-rviz2 \
+  ros-humble-tf2-ros-py ros-humble-teleop-twist-keyboard python3-opencv python3-numpy python3-yaml
 ```
+`ros-humble-ros-gz` brings Ignition Gazebo Fortress. `python3-opencv` (4.5.x) provides the AprilTag detector
+(`cv2.aruco`, dictionary `DICT_APRILTAG_36h11`), so no separate AprilTag library is needed.
 
-(`ros-humble-ros-gz` brings Ignition Gazebo Fortress.)
-
-## 2. Get it and build
-
+## 2. Get the code and build
 ```bash
-mkdir -p ~/ros2_agv_ws/src
-cd ~/ros2_agv_ws/src
-git clone https://github.com/rohithmeti/ros2_agv.git
-cd ~/ros2_agv_ws
+git clone https://github.com/rohithmeti/ros2_agv_apriltag.git ~/ros2_agv
+cd ~/ros2_agv
 source /opt/ros/humble/setup.bash
+rosdep install --from-paths src --ignore-src -y     # optional: installs anything from the list above that is missing
 colcon build --symlink-install
 source install/setup.bash
 ```
+In every new terminal: `source ~/ros2_agv/install/setup.bash`.
 
-With `--symlink-install`, edits to existing launch / urdf / world / config files
-take effect without rebuilding. **New** files need a rebuild.
-
-## 3. Launch the simulation
-
+## 3. Launch
 ```bash
-source ~/ros2_agv_ws/install/setup.bash
+# terminal 1 - simulator (Gazebo: room, walls, obstacles, tags, robot)
 ros2 launch my_bot_description sim_ign.launch.py
+
+# terminal 2 - navigation stack + RViz
+ros2 launch agv_tag_nav agv_tag_nav.launch.py          # rviz:=false to run without RViz
 ```
-
-The robot spawns at (0, 0) in the indoor room with the AprilTags on the floor.
-
-Drive it (second terminal):
-
+The robot spawns at (0, 0), where no tag is visible. It must see one tag once before it can plan, so move it onto tag 8:
 ```bash
-source ~/ros2_agv_ws/install/setup.bash
-ros2 run teleop_twist_keyboard teleop_twist_keyboard
+ign service -s /world/indoor_world/set_pose --reqtype ignition.msgs.Pose --reptype ignition.msgs.Boolean \
+  --timeout 2000 --req 'name: "my_robot2" position {x: -0.22 y: -0.8 z: 0.05} orientation {w: 1.0}'
 ```
+(or drive it with `ros2 run teleop_twist_keyboard teleop_twist_keyboard --ros-args -r cmd_vel:=cmd_vel_nav` until a tag is in view).
+The stack prints `localised from tag N`.
 
-View the cameras:
+## 4. Give a goal
+* **RViz:** choose **2D Goal Pose** (or **Publish Point**) in the toolbar and click on a tag square. The nearest tag within 0.6 m is the goal.
+* **Terminal:** `ros2 topic pub --once /agv/goal_node std_msgs/msg/Int32 "{data: 14}"`  (`-1` cancels), `ros2 topic echo /agv/status`.
 
-```bash
-ros2 run rqt_image_view rqt_image_view     # pick /camera/image_raw or /camera_down/image_raw
-```
+More detail (tag layout, obstacle test, troubleshooting): **[START.md](START.md)**.
 
-## 4. Navigation (Nav2) - optional
+## 5. What each program does
+**Navigation stack - `src/agv_tag_nav`** (Python, ROS 2 nodes started by `launch/agv_tag_nav.launch.py`)
 
-```bash
-ros2 launch nav2_bringup bringup_launch.py use_sim_time:=True \
-  map:=$HOME/ros2_agv_ws/src/ros2_agv/my_bot_description/maps/indoor_map.yaml
-ros2 run rviz2 rviz2 -d $(ros2 pkg prefix nav2_bringup)/share/nav2_bringup/rviz/nav2_default_view.rviz
-```
-
-Before using Nav2:
-* In `my_bot_description/maps/indoor_map.yaml`, change the `image:` line to
-  `image: indoor_map.pgm` (it still holds an absolute path from the original machine).
-* The robot needs a `robot_radius` of about **0.30 m** (Nav2 default is 0.22 m,
-  `config/nav2_params.yaml` still says 0.12).
-
-## 5. Topics
-
-| Topic | Type | What |
+| Program | What it does | In -> Out |
 |---|---|---|
-| `/cmd_vel` | Twist | drive command (in) |
-| `/odom` | Odometry | wheel odometry, frame `odom` -> `base_footprint` |
-| `/scan` | LaserScan | 360 deg lidar, frame `lidar_1`, 10 Hz |
-| `/camera/image_raw` | Image | **front** camera, 800x800, 30 Hz, frame `camera_front_optical_frame` |
-| `/camera/camera_info` | CameraInfo | front intrinsics |
-| `/camera_down/image_raw` | Image | **down** camera, 640x640, 30 Hz, frame `camera_down_optical_frame` |
-| `/camera_down/camera_info` | CameraInfo | down intrinsics |
-| `/joint_states` | JointState | wheel joints -> wheel TFs |
-| `/tf`, `/tf_static`, `/clock` | | |
+| `tag_map_node` | publishes the map of tags | `config/tag_map.yaml` -> static TF `map->tag_N`, RViz markers `/agv/graph` |
+| `tag_detector` | scans both cameras for AprilTags and computes each tag's pose with solvePnP | camera images + camera_info -> TF `det_front_N` / `det_down_N`, `/agv/tag_detections`, annotated images `/agv/front/tags_debug`, `/agv/down/tags_debug` |
+| `tag_localizer` | robot pose from a seen tag: `map->base = (map->tag) * inverse(base->tag seen)`; odometry carries the pose between tags | detections + TF -> TF `map->odom` |
+| `tag_navigator` | Dijkstra over the tag graph, then per node: stop, turn to the lane heading, drive the lane (pure-pursuit carrot on the lane line), centre on the tag with the down camera | `/agv/goal_node`, RViz `/goal_pose` or `/clicked_point` -> `/cmd_vel_nav`, `/agv/status`, `/agv/route_viz` |
+| `safety_stop` | lidar gate between navigator and wheels using the real footprint (0.40 x 0.30 m): slows, stops, or blocks a turn that would hit something | `/cmd_vel_nav` + `/scan` -> `/cmd_vel`, `/agv/obstacle`, `/agv/safety_viz` |
+| `graph.py`, `geom.py` | library: graph + shortest path, pose/TF maths | - |
+| `scripts/make_tag_map.py` | builds `tag_map.yaml` from the sim's tag layout | `config/apriltag_layout.yaml` -> `config/tag_map.yaml` |
+| `rviz/agv_tag_nav.rviz` | RViz view: tag graph + ids, route + goal, robot, TF, footprint + stop zone, lidar, both camera views | - |
 
-Image frames use the ROS optical convention (z forward, x right, y down), so an
-AprilTag detector's poses come out correct directly.
+**Simulator - `src/my_bot_description`**
 
-## 6. Robot (`urdf/robot.urdf.xacro` - all sizes are xacro properties at the top)
-
-| Part | Value |
+| File | What it is |
 |---|---|
-| Body | 0.40 x 0.30 x 0.12 m, 15 kg, underside 0.12 m above floor |
-| Drive wheels | r = 0.06 m, on the centre axle, separation 0.38 m (turns in place over a tag) |
-| Casters | 2 (front + rear), r = 0.025 m, on legs |
-| Lidar | on top, centred, scan height 0.26 m |
-| Front camera | front face, 0.20 m high, tilted 35 deg down, 80 deg FOV - sees floor tags ahead |
-| Down camera | under the centre, lens 0.11 m above floor, 115 deg FOV - sees 0.34 x 0.34 m of floor, a whole tag fits |
+| `launch/sim_ign.launch.py` | starts Gazebo with the world, spawns the robot, ROS<->Gazebo bridges (clock, odom, cmd_vel, scan, cameras, tf) |
+| `urdf/robot.urdf.xacro`, `urdf/ign_plugins.gazebo.xacro` | the AGV: body 0.40 x 0.30 m, two drive wheels + casters, lidar, front camera (tilted 35 deg down), down camera; diff-drive, joint-state, lidar and camera plugins |
+| `worlds/indoor_world.sdf` | 10 x 10 m room, two chicane walls, table, cube, cylinder, the 20 tags (`lane_world.sdf` is a second world) |
+| `models/apriltag_36h11_000NN/` | one Gazebo model per tag (texture + sdf) |
+| `config/apriltag_layout.yaml`, `scripts/place_apriltags.py` | tag positions -> tag models + world tag block |
+| `launch/rsp.launch.py`, `launch/slam.launch.py`, `config/nav2_params.yaml`, `config/my_nav_params.yaml`, `maps/` | older helpers (robot_state_publisher only, SLAM, Nav2); not used by this stack |
+| `ros2_amr_ws/ros2_hmi2.py` | a separate pygame HMI script; not part of this stack and not tested here |
 
-## 7. AprilTags on the floor
+## 6. Software used
+ROS 2 Humble (rclpy, TF2, launch), Ignition Gazebo Fortress via `ros_gz`, RViz2, OpenCV (AprilTag 36h11 detection + IPPE pose),
+NumPy, PyYAML, colcon. The path planner is a small Dijkstra written in `graph.py`.
 
-* Family **36h11**, IDs **0-19**, **0.20 m** black square (use this as the detector `size`), 0.25 m with white border.
-* Layout in `config/apriltag_layout.yaml`:
-  * 3 lane columns: W x=-3.30 (ids 0-5), M x=-0.22 (ids 6-11), E x=3.80 (ids 12-17)
-  * 6 rows: y = -4.0, -2.4, -0.8, 0.8, 2.4, 4.0 (id = column*6 + row, row 0 = south)
-  * connectors: id 18 (W<->M at -1.76, 0.8), id 19 (M<->E at 1.79, -0.8)
-* yaw 0 = tag top edge faces +y (north), right edge faces +x (east).
-* Flat visuals only: no collision, invisible to the lidar and the map.
-
-Move / add tags:
-
-```bash
-# 1. edit my_bot_description/config/apriltag_layout.yaml
-python3 ~/ros2_agv_ws/src/ros2_agv/my_bot_description/scripts/place_apriltags.py
-# 2. restart the sim
+## 7. Layout
 ```
-
-New IDs above 19 also need their image in `models/apriltag_36h11_000XX/materials/textures/`.
-
-## 8. Verified
-
-* All topics above publish with the listed frames.
-* Down camera parked over tag 8 detects id 8 centred in the image.
-* Front camera 0.6 m before tag 8 detects id 8.
-* Driving 0.2 m/s for 5 s: Gazebo ground truth 0.988 m, odometry 0.988 m.
-
-## 9. Files
-
-| File | In -> Out |
-|---|---|
-| `launch/sim_ign.launch.py` | world name -> Gazebo + robot + ROS bridges |
-| `urdf/robot.urdf.xacro` | sizes -> robot model (links, cameras, casters) |
-| `urdf/ign_plugins.gazebo.xacro` | -> diff drive, joint states, lidar + 2 camera sensors |
-| `worlds/indoor_world.sdf` | room + walls + obstacles + tag includes (tag block is generated) |
-| `config/apriltag_layout.yaml` | tag ids + floor positions |
-| `scripts/place_apriltags.py` | layout yaml -> tag models + world tag block |
-| `models/apriltag_36h11_000XX/` | one Gazebo model per tag (texture + sdf) |
-
-
-
-
-# SOON WILL UPDATE WITH AGV NAVIGATION STACK !
+ros2_agv/
+├── README.md  START.md  .gitignore
+└── src/
+    ├── my_bot_description/     simulator
+    └── agv_tag_nav/            navigation stack (its README.md has topics + measured results)
+```
