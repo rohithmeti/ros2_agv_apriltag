@@ -1,5 +1,11 @@
 # ros2_agv - AprilTag AGV navigation (ROS 2 Humble + Ignition Gazebo Fortress)
 
+
+
+https://github.com/user-attachments/assets/3f8efdcd-5bfa-43c6-ae8e-518ae40a1e5e
+
+
+
 A differential-drive AGV that navigates **only with AprilTags**. Tags (family 36h11, ids 0-19) lie on the floor of a simulated
 room. Each tag is a **node** of the AGV's internal map, each lane between two tags is an **edge**. Two cameras (front and
 underneath) detect the tags, TF turns the detections into the robot's pose, Dijkstra finds the shortest path over the
