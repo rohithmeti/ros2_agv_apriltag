@@ -11,7 +11,7 @@ room. Each tag is a **node** of the AGV's internal map, each lane between two ta
 underneath) detect the tags, TF turns the detections into the robot's pose, Dijkstra finds the shortest path over the
 nodes, and a lidar gate stops the robot for obstacles. Give a goal by tapping a tag in RViz.
 
-Author: rohith (rohithmeti03@gmail.com)
+
 
 ## 1. Requirements
 Ubuntu 22.04 with **ROS 2 Humble** (`ros-humble-desktop`), then:
